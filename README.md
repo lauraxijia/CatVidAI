@@ -18,3 +18,6 @@ curl -X 'POST' 'http://127.0.0.1:8000/generate_image' \
          }'
 
 ```
+
+Classificaion based on audio dataset:
+https://www.kaggle.com/datasets/andrewmvd/cat-meow-classification/code
