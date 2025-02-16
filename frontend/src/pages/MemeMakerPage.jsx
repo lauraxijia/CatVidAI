@@ -11,38 +11,29 @@ import {
   CardBody,
   Input,
   Flex,
-  IconButton,
   Spinner,
-  Icon,
+  IconButton,
+  HStack,
 } from '@chakra-ui/react'
-import { FiUpload, FiDownload } from 'react-icons/fi'
+import { FiDownload } from 'react-icons/fi'
+import {
+  FacebookShareButton,
+  TwitterShareButton,
+  WhatsappShareButton,
+  LinkedinShareButton,
+  FacebookIcon,
+  TwitterIcon,
+  WhatsappIcon,
+  LinkedinIcon,
+} from 'react-share'
 import axios from 'axios'
 
 const MemeMakerPage = () => {
-  const [image, setImage] = useState(null)
   const [generatedImage, setGeneratedImage] = useState(null)
   const [loading, setLoading] = useState(false)
   const [prompt, setPrompt] = useState('')
+  const [shareURL, setShareURL] = useState('')
   const toast = useToast()
-
-  // Handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0]
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImage(reader.result)
-      }
-      reader.readAsDataURL(file)
-    } else {
-      toast({
-        title: 'Invalid file type',
-        description: 'Please upload an image file',
-        status: 'error',
-        duration: 3000,
-      })
-    }
-  }
 
   // Call FastAPI to generate meme
   const generateMeme = async () => {
@@ -68,6 +59,8 @@ const MemeMakerPage = () => {
       })
 
       setGeneratedImage(response.data.image_url)
+      setShareURL(response.data.image_url) // Set shareable image URL
+
       toast({
         title: 'Success!',
         description: 'Your meme has been generated',
@@ -108,6 +101,7 @@ const MemeMakerPage = () => {
       <Card variant="outline" maxW="600px" mx="auto">
         <CardBody>
           <VStack spacing={6}>
+            {/* Meme Text Input */}
             <Input
               placeholder="Enter your meme prompt..."
               value={prompt}
@@ -116,6 +110,7 @@ const MemeMakerPage = () => {
               fontSize="lg"
             />
 
+            {/* Generate Meme Button */}
             <Button
               colorScheme="purple"
               size="lg"
@@ -127,6 +122,7 @@ const MemeMakerPage = () => {
               Generate Meme
             </Button>
 
+            {/* Loading Spinner */}
             {loading && (
               <Flex direction="column" align="center">
                 <Spinner size="xl" color="purple.500" />
@@ -134,6 +130,7 @@ const MemeMakerPage = () => {
               </Flex>
             )}
 
+            {/* Display Generated Meme */}
             {generatedImage && (
               <Box position="relative" w="100%">
                 <Image
@@ -153,6 +150,30 @@ const MemeMakerPage = () => {
                   aria-label="Download meme"
                 />
               </Box>
+            )}
+
+            {/* Social Media Sharing */}
+            {generatedImage && (
+              <>
+                <Text fontWeight="bold" fontSize="lg">Share Your Meme:</Text>
+                <HStack spacing={4} justify="center">
+                  <FacebookShareButton url={shareURL} quote={`Check out my AI-generated meme!`}>
+                    <FacebookIcon size={32} round />
+                  </FacebookShareButton>
+
+                  <TwitterShareButton url={shareURL} title={`Check out my cat's AI-generated meme!`}>
+                    <TwitterIcon size={32} round />
+                  </TwitterShareButton>
+
+                  <WhatsappShareButton url={shareURL} title={`Check out my cat's AI-generated meme!`}>
+                    <WhatsappIcon size={32} round />
+                  </WhatsappShareButton>
+
+                  <LinkedinShareButton url={shareURL} title={`Check out my cat's AI-generated meme!`} summary="AI-powered meme generation">
+                    <LinkedinIcon size={32} round />
+                  </LinkedinShareButton>
+                </HStack>
+              </>
             )}
           </VStack>
         </CardBody>

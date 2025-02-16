@@ -1,147 +1,114 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react';
 import {
   Box,
   Button,
   VStack,
-  HStack,
   Text,
   useToast,
   Image,
   Heading,
-  Grid,
-  IconButton,
   Card,
   CardBody,
-  Icon,
+  Flex,
   Spinner,
-} from '@chakra-ui/react'
-import { FaShare } from 'react-icons/fa'
+  Icon,
+  HStack,
+} from '@chakra-ui/react';
+import { FiUpload } from 'react-icons/fi';
 import {
   FacebookShareButton,
   TwitterShareButton,
   WhatsappShareButton,
+  LinkedinShareButton,
   FacebookIcon,
   TwitterIcon,
   WhatsappIcon,
-} from 'react-share'
-import { FiUpload } from 'react-icons/fi'
-import axios from 'axios'
-
-const STICKERS = [
-  { id: 1, src: 'https://placekitten.com/50/50', alt: 'Cat sticker 1' },
-  { id: 2, src: 'https://placekitten.com/51/51', alt: 'Cat sticker 2' },
-  { id: 3, src: 'https://placekitten.com/52/52', alt: 'Cat sticker 3' },
-]
+  LinkedinIcon,
+} from 'react-share';
+import axios from 'axios';
 
 const EditorPage = () => {
-  const [videoFile, setVideoFile] = useState(null)
-  const [videoURL, setVideoURL] = useState(null)
-  const [processedVideoURL, setProcessedVideoURL] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [stickers, setStickers] = useState([])
-  const videoRef = useRef(null)
-  const toast = useToast()
+  const [imageFile, setImageFile] = useState(null);
+  const [imageURL, setImageURL] = useState(null);
+  const [generatedResponse, setGeneratedResponse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [shareURL, setShareURL] = useState('');
+  const toast = useToast();
 
-  // Handle video selection
+  // Handle image selection
   const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file && file.type.includes('video')) {
-      setVideoFile(file)
-      setVideoURL(URL.createObjectURL(file))
-    }
-  }
-
-  // Handle Sticker Click
-  const handleStickerClick = (sticker) => {
-    setStickers([...stickers, { ...sticker, x: 50, y: 50 }])
-  }
-
-  // Handle Sticker Drag
-  const handleStickerDrag = (index, e) => {
-    const newStickers = [...stickers]
-    const videoRect = videoRef.current.getBoundingClientRect()
-    const x = ((e.clientX - videoRect.left) / videoRect.width) * 100
-    const y = ((e.clientY - videoRect.top) / videoRect.height) * 100
-    newStickers[index] = { ...newStickers[index], x, y }
-    setStickers(newStickers)
-  }
-
-  // Upload Video and Process on Backend
-  const handleUpload = async () => {
-    if (!videoFile) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setImageFile(file);
+      setImageURL(URL.createObjectURL(file));
+    } else {
       toast({
-        title: 'No Video Selected',
-        description: 'Please upload a video first.',
+        title: 'Invalid file type',
+        description: 'Please upload a valid image file',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
+  // Upload Image and Process on Backend
+  const handleUpload = async () => {
+    if (!imageFile) {
+      toast({
+        title: 'No Image Selected',
+        description: 'Please upload an image first.',
         status: 'warning',
         duration: 3000,
-      })
-      return
+      });
+      return;
     }
 
-    setLoading(true)
-    const formData = new FormData()
-    formData.append('video', videoFile)
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', imageFile);
 
     try {
-      const response = await axios.post('http://localhost:8000/process_video', formData, {
+      const response = await axios.post('http://localhost:8000/process_image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      });
 
-      setProcessedVideoURL(response.data.processed_video_url)
+      setGeneratedResponse(response.data.generated_text);
+
+      // Generate shareable link
+      const shareableText = `AI Response: ${response.data.generated_text}`;
+      setShareURL(`https://yourwebsite.com/share?text=${encodeURIComponent(shareableText)}`);
+
       toast({
         title: 'Success!',
-        description: 'Video has been processed.',
+        description: 'Image has been processed.',
         status: 'success',
         duration: 3000,
-      })
+      });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to process video.',
+        description: 'Failed to process image.',
         status: 'error',
         duration: 3000,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
-        <Heading size="2xl" mb={3}>Video Editor</Heading>
-        <Text color="gray.600" fontSize="xl">Upload and process your cat videos</Text>
+        <Heading size="2xl" mb={3}>AI Image Processor</Heading>
+        <Text color="gray.600" fontSize="xl">Upload an image and let AI make it funny & cute</Text>
       </Box>
 
       <Card variant="outline" maxW="600px" mx="auto">
         <CardBody>
           <VStack spacing={6}>
-            {videoURL ? (
-              <Box position="relative">
-                <video
-                  ref={videoRef}
-                  src={videoURL}
-                  controls
-                  style={{ width: '100%', borderRadius: '8px' }}
-                />
-                {stickers.map((sticker, index) => (
-                  <Image
-                    key={index}
-                    src={sticker.src}
-                    alt={sticker.alt}
-                    position="absolute"
-                    style={{
-                      left: `${sticker.x}%`,
-                      top: `${sticker.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                      cursor: 'move',
-                    }}
-                    draggable
-                    onDrag={(e) => handleStickerDrag(index, e)}
-                    width="50px"
-                    height="50px"
-                  />
-                ))}
+            {imageURL ? (
+              <Box position="relative" w="100%">
+                <Image src={imageURL} alt="Uploaded image" borderRadius="md" maxH="400px" mx="auto" />
               </Box>
             ) : (
               <Box
@@ -153,16 +120,16 @@ const EditorPage = () => {
                 textAlign="center"
                 bg="purple.50"
                 cursor="pointer"
-                onClick={() => document.getElementById('videoInput').click()}
+                onClick={() => document.getElementById('imageInput').click()}
               >
                 <Icon as={FiUpload} w={12} h={12} color="purple.500" mb={4} />
                 <Text fontWeight="medium" fontSize="lg">
-                  Click to upload a video
+                  Click to upload an image
                 </Text>
                 <input
-                  id="videoInput"
+                  id="imageInput"
                   type="file"
-                  accept="video/*"
+                  accept="image/*"
                   onChange={handleFileChange}
                   style={{ display: 'none' }}
                 />
@@ -172,24 +139,48 @@ const EditorPage = () => {
         </CardBody>
       </Card>
 
-      {videoURL && (
+      {imageURL && (
         <>
           <Button colorScheme="purple" isLoading={loading} onClick={handleUpload}>
-            Process Video
+            Process Image
           </Button>
 
           {loading && <Spinner size="xl" color="purple.500" />}
 
-          {processedVideoURL && (
-            <Box textAlign="center">
-              <Text fontWeight="bold" fontSize="lg">Processed Video:</Text>
-              <video src={processedVideoURL} controls style={{ width: '100%', borderRadius: '8px' }} />
+          {generatedResponse && (
+            <Box p={4} bg="gray.50" borderRadius="md">
+              <Text fontWeight="bold" fontSize="lg">AI Response:</Text>
+              <Text>{generatedResponse}</Text>
             </Box>
+          )}
+
+          {/* Social Media Sharing */}
+          {generatedResponse && (
+            <>
+              <Text fontWeight="bold" fontSize="lg">Share Your Results:</Text>
+              <HStack spacing={4} justify="center">
+                <FacebookShareButton url={shareURL} quote={`Check out this AI-generated description: ${generatedResponse}`}>
+                  <FacebookIcon size={32} round />
+                </FacebookShareButton>
+
+                <TwitterShareButton url={shareURL} title={`Check out this AI-generated description: ${generatedResponse}`}>
+                  <TwitterIcon size={32} round />
+                </TwitterShareButton>
+
+                <WhatsappShareButton url={shareURL} title={`Check out this AI-generated description: ${generatedResponse}`}>
+                  <WhatsappIcon size={32} round />
+                </WhatsappShareButton>
+
+                <LinkedinShareButton url={shareURL} title={`Check out this AI-generated description: ${generatedResponse}`} summary="AI-powered image processing">
+                  <LinkedinIcon size={32} round />
+                </LinkedinShareButton>
+              </HStack>
+            </>
           )}
         </>
       )}
     </VStack>
-  )
-}
+  );
+};
 
-export default EditorPage
+export default EditorPage;

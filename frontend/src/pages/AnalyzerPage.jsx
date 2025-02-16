@@ -10,8 +10,19 @@ import {
   CardBody,
   Icon,
   Heading,
+  HStack,
 } from '@chakra-ui/react';
 import { FiUpload } from 'react-icons/fi';
+import {
+  FacebookShareButton,
+  TwitterShareButton,
+  WhatsappShareButton,
+  LinkedinShareButton,
+  FacebookIcon,
+  TwitterIcon,
+  WhatsappIcon,
+  LinkedinIcon,
+} from 'react-share';
 import axios from 'axios';
 
 const AnalyzerPage = () => {
@@ -19,6 +30,7 @@ const AnalyzerPage = () => {
   const [fileURL, setFileURL] = useState(null); // Store file URL for playback
   const [uploading, setUploading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  const [shareURL, setShareURL] = useState('');
   const toast = useToast();
   const videoRef = useRef(null);
   const audioRef = useRef(null);
@@ -55,6 +67,11 @@ const AnalyzerPage = () => {
       });
 
       setAnalysis(response.data);
+
+      // Generate a shareable URL with the analysis result
+      const shareableText = `My cat's mood analysis: ${response.data.cat_intent}`;
+      setShareURL(`https://yourwebsite.com/share?text=${encodeURIComponent(shareableText)}`);
+
       toast({
         title: 'Success!',
         description: 'Audio analyzed successfully',
@@ -76,7 +93,7 @@ const AnalyzerPage = () => {
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
-        <Heading size="2xl" mb={3}>Cat Sound Analyzer</Heading>
+        <Heading size="2xl" mb={3}>Cat Need Analyzer</Heading>
         <Text color="gray.600" fontSize="xl">Upload a video or audio file to analyze your cat's mood</Text>
       </Box>
 
@@ -144,6 +161,26 @@ const AnalyzerPage = () => {
                 <Box p={4} bg="gray.50" borderRadius="md">
                   <Text>Cat Intent: {analysis.cat_intent}</Text>
                 </Box>
+
+                {/* Social Media Sharing */}
+                <Text fontWeight="bold" fontSize="lg">Share Your Results:</Text>
+                <HStack spacing={4} justify="center">
+                  <FacebookShareButton url={shareURL} quote={`Check out my cat's mood: ${analysis.cat_intent}`}>
+                    <FacebookIcon size={32} round />
+                  </FacebookShareButton>
+
+                  <TwitterShareButton url={shareURL} title={`Check out my cat's mood: ${analysis.cat_intent}`}>
+                    <TwitterIcon size={32} round />
+                  </TwitterShareButton>
+
+                  <WhatsappShareButton url={shareURL} title={`Check out my cat's mood: ${analysis.cat_intent}`}>
+                    <WhatsappIcon size={32} round />
+                  </WhatsappShareButton>
+
+                  <LinkedinShareButton url={shareURL} title={`Check out my cat's mood: ${analysis.cat_intent}`} summary="AI-powered cat sound analysis">
+                    <LinkedinIcon size={32} round />
+                  </LinkedinShareButton>
+                </HStack>
               </VStack>
             )}
           </VStack>

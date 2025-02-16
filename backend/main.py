@@ -12,6 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import subprocess
 import uuid
 import shutil
+import base64
+import shutil
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from openai import OpenAI
+from fastapi.middleware.cors import CORSMiddleware
+import base64
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -185,3 +191,54 @@ async def process_video(video: UploadFile = File(...)):
 async def get_processed_video(filename: str):
     """ Serves processed videos """
     return FileResponse(os.path.join(VIDEO_DIR, filename))
+
+
+
+
+
+# Directory to temporarily store images
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def encode_image_to_base64(image_path):
+    """ Convert image to Base64 encoding """
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode("utf-8")
+
+@app.post("/process_image")
+async def process_image(file: UploadFile = File(...)):
+    """ Receives an image, processes it using Nebius AI, and returns only the AI-generated text description """
+    try:
+        # Save uploaded image
+        image_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(image_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Convert image to Base64
+        image_base64 = encode_image_to_base64(image_path)
+
+        # Call Nebius AI
+        response = client.chat.completions.create(
+            model="llava-hf/llava-1.5-13b-hf",
+            temperature=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Describe this image"},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                    ]
+                }
+            ]
+        )
+
+        # Cleanup uploaded file
+        os.remove(image_path)
+
+        # Extract and return only the AI-generated text description
+        ai_text_response = response.choices[0].message.content
+
+        return {"generated_text": ai_text_response}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
