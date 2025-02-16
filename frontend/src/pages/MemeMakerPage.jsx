@@ -13,6 +13,7 @@ import {
   Flex,
   IconButton,
   Spinner,
+  Icon,
 } from '@chakra-ui/react'
 import { FiUpload, FiDownload } from 'react-icons/fi'
 import axios from 'axios'
@@ -92,11 +93,11 @@ const MemeMakerPage = () => {
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
-        <Heading size="lg" mb={2}>Meme Generator</Heading>
-        <Text color="gray.600">Upload an image and create custom memes with Pika</Text>
+        <Heading size="2xl" mb={3}>Cat Meme Maker</Heading>
+        <Text color="gray.600" fontSize="xl">Transform your cat photos into hilarious memes</Text>
       </Box>
 
-      <Card variant="outline" maxW="800px" mx="auto">
+      <Card variant="outline" maxW="600px" mx="auto">
         <CardBody>
           <VStack spacing={6}>
             {!image ? (
@@ -111,15 +112,10 @@ const MemeMakerPage = () => {
                 cursor="pointer"
                 onClick={() => document.getElementById('imageInput').click()}
               >
-                <IconButton
-                  icon={<FiUpload />}
-                  size="lg"
-                  colorScheme="purple"
-                  variant="ghost"
-                  mb={4}
-                  aria-label="Upload image"
-                />
-                <Text>Click to upload an image or drag and drop</Text>
+                <Icon as={FiUpload} w={12} h={12} color="purple.500" mb={4} />
+                <Text fontWeight="medium" fontSize="lg">
+                  Click to upload or drag and drop
+                </Text>
                 <input
                   id="imageInput"
                   type="file"
@@ -151,10 +147,11 @@ const MemeMakerPage = () => {
             )}
 
             <Input
-              placeholder="Describe your meme idea (e.g., 'Add a funny cat emoji in the corner')"
+              placeholder="Enter your meme prompt..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               size="lg"
+              fontSize="lg"
             />
 
             <Button

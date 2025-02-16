@@ -10,6 +10,9 @@ import {
   Heading,
   Grid,
   IconButton,
+  Card,
+  CardBody,
+  Icon,
 } from '@chakra-ui/react'
 import { FaShare } from 'react-icons/fa'
 import {
@@ -20,6 +23,7 @@ import {
   TwitterIcon,
   WhatsappIcon,
 } from 'react-share'
+import { FiUpload } from 'react-icons/fi'
 
 const STICKERS = [
   { id: 1, src: 'https://placekitten.com/50/50', alt: 'Cat sticker 1' },
@@ -68,65 +72,73 @@ const EditorPage = () => {
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
-        <Heading size="lg" mb={2}>Video Editor</Heading>
-        <Text color="gray.600">Add stickers and share your cat videos</Text>
+        <Heading size="2xl" mb={3}>Video Editor</Heading>
+        <Text color="gray.600" fontSize="xl">Add fun stickers to your cat videos</Text>
       </Box>
 
-      <Box position="relative" maxW="800px" mx="auto">
-        {videoUrl ? (
-          <Box position="relative">
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              controls
-              style={{ width: '100%', borderRadius: '8px' }}
-            />
-            {stickers.map((sticker, index) => (
-              <Image
-                key={index}
-                src={sticker.src}
-                alt={sticker.alt}
-                position="absolute"
-                style={{
-                  left: `${sticker.x}%`,
-                  top: `${sticker.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                  cursor: 'move',
-                }}
-                draggable
-                onDrag={(e) => handleStickerDrag(index, e)}
-                width="50px"
-                height="50px"
-              />
-            ))}
-          </Box>
-        ) : (
-          <Box
-            border="2px dashed"
-            borderColor="purple.200"
-            borderRadius="lg"
-            p={10}
-            textAlign="center"
-            bg="purple.50"
-            cursor="pointer"
-            onClick={() => document.getElementById('videoInput').click()}
-          >
-            <Text>Click to upload a video</Text>
-            <input
-              id="videoInput"
-              type="file"
-              accept="video/*"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-          </Box>
-        )}
-      </Box>
+      <Card variant="outline" maxW="600px" mx="auto">
+        <CardBody>
+          <VStack spacing={6}>
+            {videoUrl ? (
+              <Box position="relative">
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  style={{ width: '100%', borderRadius: '8px' }}
+                />
+                {stickers.map((sticker, index) => (
+                  <Image
+                    key={index}
+                    src={sticker.src}
+                    alt={sticker.alt}
+                    position="absolute"
+                    style={{
+                      left: `${sticker.x}%`,
+                      top: `${sticker.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                      cursor: 'move',
+                    }}
+                    draggable
+                    onDrag={(e) => handleStickerDrag(index, e)}
+                    width="50px"
+                    height="50px"
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Box
+                border="2px dashed"
+                borderColor="purple.200"
+                borderRadius="lg"
+                p={10}
+                w="100%"
+                textAlign="center"
+                bg="purple.50"
+                cursor="pointer"
+                onClick={() => document.getElementById('videoInput').click()}
+              >
+                <Icon as={FiUpload} w={12} h={12} color="purple.500" mb={4} />
+                <Text fontWeight="medium" fontSize="lg">
+                  Click to upload a video
+                </Text>
+                <input
+                  id="videoInput"
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </Box>
+            )}
+          </VStack>
+        </CardBody>
+      </Card>
 
       {videoUrl && (
         <>
           <Box>
-            <Text fontWeight="bold" mb={4}>Available Stickers:</Text>
+            <Text fontWeight="bold" mb={4} fontSize="lg">Available Stickers:</Text>
             <Grid templateColumns="repeat(auto-fill, minmax(80px, 1fr))" gap={4}>
               {STICKERS.map((sticker) => (
                 <Box

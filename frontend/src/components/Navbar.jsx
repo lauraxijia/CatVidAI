@@ -5,7 +5,7 @@ const Navbar = () => {
   return (
     <Box bg="white" px={4} shadow="sm">
       <Flex h={16} alignItems="center" justifyContent="space-between" maxW="1200px" mx="auto">
-        <Heading size="md" color="purple.600">
+        <Heading size="xl" color="purple.600">
           CatVidAI
         </Heading>
         
@@ -15,6 +15,7 @@ const Navbar = () => {
             to="/"
             variant="ghost"
             colorScheme="purple"
+            fontSize="lg"
           >
             Analyzer
           </Button>
@@ -23,6 +24,7 @@ const Navbar = () => {
             to="/editor"
             variant="ghost"
             colorScheme="purple"
+            fontSize="lg"
           >
             Editor
           </Button>
@@ -31,6 +33,7 @@ const Navbar = () => {
             to="/memes"
             variant="ghost"
             colorScheme="purple"
+            fontSize="lg"
           >
             Meme Maker
           </Button>

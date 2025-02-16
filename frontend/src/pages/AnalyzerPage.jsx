@@ -65,8 +65,8 @@ const AnalyzerPage = () => {
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
-        <Heading size="lg" mb={2}>Cat Sound Analyzer</Heading>
-        <Text color="gray.600">Upload a video to analyze your cat's mood</Text>
+        <Heading size="2xl" mb={3}>Cat Sound Analyzer</Heading>
+        <Text color="gray.600" fontSize="xl">Upload a video to analyze your cat's mood</Text>
       </Box>
 
       <Card variant="outline" maxW="600px" mx="auto">
@@ -83,8 +83,8 @@ const AnalyzerPage = () => {
               cursor="pointer"
               onClick={() => document.getElementById('fileInput').click()}
             >
-              <Icon as={FiUpload} w={10} h={10} color="purple.500" mb={4} />
-              <Text fontWeight="medium">
+              <Icon as={FiUpload} w={12} h={12} color="purple.500" mb={4} />
+              <Text fontWeight="medium" fontSize="lg">
                 {file ? file.name : 'Click to upload or drag and drop'}
               </Text>
               <input
