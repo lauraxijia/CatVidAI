@@ -1,3 +1,7 @@
 fastapi
 openai
 uvicorn
+librosa
+tensorflow
+numpy
+joblib
