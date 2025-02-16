@@ -25,6 +25,7 @@ const MemeMakerPage = () => {
   const [prompt, setPrompt] = useState('')
   const toast = useToast()
 
+  // Handle image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0]
     if (file && file.type.startsWith('image/')) {
@@ -43,11 +44,12 @@ const MemeMakerPage = () => {
     }
   }
 
+  // Call FastAPI to generate meme
   const generateMeme = async () => {
-    if (!image || !prompt) {
+    if (!prompt) {
       toast({
         title: 'Missing input',
-        description: 'Please upload an image and provide a prompt',
+        description: 'Please enter a meme prompt',
         status: 'warning',
         duration: 3000,
       })
@@ -56,11 +58,16 @@ const MemeMakerPage = () => {
 
     setLoading(true)
     try {
-      const response = await axios.post('http://localhost:5000/api/generate-meme', {
-        image: image,
+      const response = await axios.post('http://localhost:8000/generate_image', {
         prompt: prompt,
+        width: 1024,
+        height: 1024,
+        num_inference_steps: 50,
+        negative_prompt: "",
+        seed: 42,
       })
-      setGeneratedImage(response.data.generatedImage)
+
+      setGeneratedImage(response.data.image_url)
       toast({
         title: 'Success!',
         description: 'Your meme has been generated',
@@ -79,6 +86,7 @@ const MemeMakerPage = () => {
     }
   }
 
+  // Download generated meme
   const downloadImage = () => {
     if (generatedImage) {
       const link = document.createElement('a')
@@ -93,59 +101,13 @@ const MemeMakerPage = () => {
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
-        <Heading size="2xl" mb={3}>Cat Meme Maker</Heading>
-        <Text color="gray.600" fontSize="xl">Transform your cat photos into hilarious memes</Text>
+        <Heading size="2xl" mb={3}>AI Meme Generator using Stability AI by Nebius</Heading>
+        <Text color="gray.600" fontSize="xl">Generate hilarious AI-powered memes</Text>
       </Box>
 
       <Card variant="outline" maxW="600px" mx="auto">
         <CardBody>
           <VStack spacing={6}>
-            {!image ? (
-              <Box
-                border="2px dashed"
-                borderColor="purple.200"
-                borderRadius="lg"
-                p={10}
-                w="100%"
-                textAlign="center"
-                bg="purple.50"
-                cursor="pointer"
-                onClick={() => document.getElementById('imageInput').click()}
-              >
-                <Icon as={FiUpload} w={12} h={12} color="purple.500" mb={4} />
-                <Text fontWeight="medium" fontSize="lg">
-                  Click to upload or drag and drop
-                </Text>
-                <input
-                  id="imageInput"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: 'none' }}
-                />
-              </Box>
-            ) : (
-              <Box position="relative" w="100%">
-                <Image
-                  src={image}
-                  alt="Uploaded image"
-                  borderRadius="md"
-                  maxH="400px"
-                  mx="auto"
-                />
-                <Button
-                  size="sm"
-                  position="absolute"
-                  top={2}
-                  right={2}
-                  colorScheme="purple"
-                  onClick={() => setImage(null)}
-                >
-                  Change Image
-                </Button>
-              </Box>
-            )}
-
             <Input
               placeholder="Enter your meme prompt..."
               value={prompt}
@@ -159,7 +121,7 @@ const MemeMakerPage = () => {
               size="lg"
               isLoading={loading}
               onClick={generateMeme}
-              isDisabled={!image || !prompt}
+              isDisabled={!prompt}
               w="full"
             >
               Generate Meme
@@ -168,7 +130,7 @@ const MemeMakerPage = () => {
             {loading && (
               <Flex direction="column" align="center">
                 <Spinner size="xl" color="purple.500" />
-                <Text mt={2} color="gray.600">Creating your meme with Pika...</Text>
+                <Text mt={2} color="gray.600">Generating your meme...</Text>
               </Flex>
             )}
 

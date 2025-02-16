@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -10,63 +10,74 @@ import {
   CardBody,
   Icon,
   Heading,
-} from '@chakra-ui/react'
-import { FiUpload } from 'react-icons/fi'
-import axios from 'axios'
+} from '@chakra-ui/react';
+import { FiUpload } from 'react-icons/fi';
+import axios from 'axios';
 
 const AnalyzerPage = () => {
-  const [file, setFile] = useState(null)
-  const [uploading, setUploading] = useState(false)
-  const [analysis, setAnalysis] = useState(null)
-  const toast = useToast()
+  const [file, setFile] = useState(null);
+  const [fileURL, setFileURL] = useState(null); // Store file URL for playback
+  const [uploading, setUploading] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const toast = useToast();
+  const videoRef = useRef(null);
+  const audioRef = useRef(null);
 
+  // Handle file selection (video or audio)
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0]
-    if (selectedFile && selectedFile.type.includes('video')) {
-      setFile(selectedFile)
+    const selectedFile = e.target.files[0];
+    if (selectedFile && (selectedFile.type.includes('video') || selectedFile.type.includes('audio'))) {
+      setFile(selectedFile);
+      setFileURL(URL.createObjectURL(selectedFile)); // Generate preview URL
     } else {
       toast({
         title: 'Invalid file type',
-        description: 'Please select a video file',
+        description: 'Please select a valid video or audio file',
         status: 'error',
         duration: 3000,
-      })
+      });
     }
-  }
+  };
 
+  // Handle file upload to backend
   const handleUpload = async () => {
-    if (!file) return
+    if (!file) return;
 
-    const formData = new FormData()
-    formData.append('video', file)
-    setUploading(true)
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/upload', formData)
-      setAnalysis(response.data.analysis)
+      const response = await axios.post('http://localhost:8000/analyze-cat-sound', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: false, // Fix CORS issue
+      });
+
+      setAnalysis(response.data);
       toast({
         title: 'Success!',
-        description: 'Video analyzed successfully',
+        description: 'Audio analyzed successfully',
         status: 'success',
         duration: 3000,
-      })
+      });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to analyze video',
+        description: 'Failed to analyze audio',
         status: 'error',
         duration: 3000,
-      })
+      });
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
         <Heading size="2xl" mb={3}>Cat Sound Analyzer</Heading>
-        <Text color="gray.600" fontSize="xl">Upload a video to analyze your cat's mood</Text>
+        <Text color="gray.600" fontSize="xl">Upload a video or audio file to analyze your cat's mood</Text>
       </Box>
 
       <Card variant="outline" maxW="600px" mx="auto">
@@ -90,12 +101,29 @@ const AnalyzerPage = () => {
               <input
                 id="fileInput"
                 type="file"
-                accept="video/*"
+                accept="video/*,audio/*"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
               />
             </Box>
 
+            {/* Video Preview */}
+            {fileURL && file?.type.includes('video') && (
+              <video ref={videoRef} controls width="100%">
+                <source src={fileURL} type={file.type} />
+                Your browser does not support the video tag.
+              </video>
+            )}
+
+            {/* Audio Preview */}
+            {fileURL && file?.type.includes('audio') && (
+              <audio ref={audioRef} controls>
+                <source src={fileURL} type={file.type} />
+                Your browser does not support the audio element.
+              </audio>
+            )}
+
+            {/* Upload Button */}
             <Button
               colorScheme="purple"
               isLoading={uploading}
@@ -103,18 +131,18 @@ const AnalyzerPage = () => {
               isDisabled={!file}
               w="full"
             >
-              Analyze Video
+              Analyze Audio
             </Button>
 
+            {/* Upload Progress */}
             {uploading && <Progress size="xs" isIndeterminate w="100%" />}
 
+            {/* Display Analysis Results */}
             {analysis && (
               <VStack spacing={4} w="100%" align="stretch">
                 <Text fontWeight="bold" fontSize="lg">Analysis Results:</Text>
                 <Box p={4} bg="gray.50" borderRadius="md">
-                  <Text>Content: {analysis.content ? 'Yes' : 'No'}</Text>
-                  <Text>Scared: {analysis.scared ? 'Yes' : 'No'}</Text>
-                  <Text>Hungry: {analysis.hungry ? 'Yes' : 'No'}</Text>
+                  <Text>Cat Intent: {analysis.cat_intent}</Text>
                 </Box>
               </VStack>
             )}
@@ -122,7 +150,7 @@ const AnalyzerPage = () => {
         </CardBody>
       </Card>
     </VStack>
-  )
-}
+  );
+};
 
-export default AnalyzerPage
+export default AnalyzerPage;

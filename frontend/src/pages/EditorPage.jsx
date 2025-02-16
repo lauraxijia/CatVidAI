@@ -13,6 +13,7 @@ import {
   Card,
   CardBody,
   Icon,
+  Spinner,
 } from '@chakra-ui/react'
 import { FaShare } from 'react-icons/fa'
 import {
@@ -24,6 +25,7 @@ import {
   WhatsappIcon,
 } from 'react-share'
 import { FiUpload } from 'react-icons/fi'
+import axios from 'axios'
 
 const STICKERS = [
   { id: 1, src: 'https://placekitten.com/50/50', alt: 'Cat sticker 1' },
@@ -32,24 +34,29 @@ const STICKERS = [
 ]
 
 const EditorPage = () => {
-  const [videoUrl, setVideoUrl] = useState(null)
-  const [selectedSticker, setSelectedSticker] = useState(null)
+  const [videoFile, setVideoFile] = useState(null)
+  const [videoURL, setVideoURL] = useState(null)
+  const [processedVideoURL, setProcessedVideoURL] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [stickers, setStickers] = useState([])
   const videoRef = useRef(null)
   const toast = useToast()
 
+  // Handle video selection
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (file && file.type.includes('video')) {
-      setVideoUrl(URL.createObjectURL(file))
+      setVideoFile(file)
+      setVideoURL(URL.createObjectURL(file))
     }
   }
 
+  // Handle Sticker Click
   const handleStickerClick = (sticker) => {
-    setSelectedSticker(sticker)
     setStickers([...stickers, { ...sticker, x: 50, y: 50 }])
   }
 
+  // Handle Sticker Drag
   const handleStickerDrag = (index, e) => {
     const newStickers = [...stickers]
     const videoRect = videoRef.current.getBoundingClientRect()
@@ -59,31 +66,61 @@ const EditorPage = () => {
     setStickers(newStickers)
   }
 
-  const handleShare = () => {
-    // In a real app, we would first save the edited video
-    toast({
-      title: 'Share',
-      description: 'Video ready to share!',
-      status: 'success',
-      duration: 3000,
-    })
+  // Upload Video and Process on Backend
+  const handleUpload = async () => {
+    if (!videoFile) {
+      toast({
+        title: 'No Video Selected',
+        description: 'Please upload a video first.',
+        status: 'warning',
+        duration: 3000,
+      })
+      return
+    }
+
+    setLoading(true)
+    const formData = new FormData()
+    formData.append('video', videoFile)
+
+    try {
+      const response = await axios.post('http://localhost:8000/process_video', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      setProcessedVideoURL(response.data.processed_video_url)
+      toast({
+        title: 'Success!',
+        description: 'Video has been processed.',
+        status: 'success',
+        duration: 3000,
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to process video.',
+        status: 'error',
+        duration: 3000,
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <VStack spacing={8} align="stretch">
       <Box textAlign="center">
         <Heading size="2xl" mb={3}>Video Editor</Heading>
-        <Text color="gray.600" fontSize="xl">Add fun stickers to your cat videos</Text>
+        <Text color="gray.600" fontSize="xl">Upload and process your cat videos</Text>
       </Box>
 
       <Card variant="outline" maxW="600px" mx="auto">
         <CardBody>
           <VStack spacing={6}>
-            {videoUrl ? (
+            {videoURL ? (
               <Box position="relative">
                 <video
                   ref={videoRef}
-                  src={videoUrl}
+                  src={videoURL}
                   controls
                   style={{ width: '100%', borderRadius: '8px' }}
                 />
@@ -135,43 +172,20 @@ const EditorPage = () => {
         </CardBody>
       </Card>
 
-      {videoUrl && (
+      {videoURL && (
         <>
-          <Box>
-            <Text fontWeight="bold" mb={4} fontSize="lg">Available Stickers:</Text>
-            <Grid templateColumns="repeat(auto-fill, minmax(80px, 1fr))" gap={4}>
-              {STICKERS.map((sticker) => (
-                <Box
-                  key={sticker.id}
-                  onClick={() => handleStickerClick(sticker)}
-                  cursor="pointer"
-                  p={2}
-                  borderRadius="md"
-                  _hover={{ bg: 'purple.50' }}
-                >
-                  <Image src={sticker.src} alt={sticker.alt} />
-                </Box>
-              ))}
-            </Grid>
-          </Box>
+          <Button colorScheme="purple" isLoading={loading} onClick={handleUpload}>
+            Process Video
+          </Button>
 
-          <HStack spacing={4} justify="center">
-            <FacebookShareButton url={window.location.href}>
-              <FacebookIcon size={32} round />
-            </FacebookShareButton>
-            <TwitterShareButton url={window.location.href}>
-              <TwitterIcon size={32} round />
-            </TwitterShareButton>
-            <WhatsappShareButton url={window.location.href}>
-              <WhatsappIcon size={32} round />
-            </WhatsappShareButton>
-            <IconButton
-              icon={<FaShare />}
-              colorScheme="purple"
-              onClick={handleShare}
-              aria-label="Share video"
-            />
-          </HStack>
+          {loading && <Spinner size="xl" color="purple.500" />}
+
+          {processedVideoURL && (
+            <Box textAlign="center">
+              <Text fontWeight="bold" fontSize="lg">Processed Video:</Text>
+              <video src={processedVideoURL} controls style={{ width: '100%', borderRadius: '8px' }} />
+            </Box>
+          )}
         </>
       )}
     </VStack>
