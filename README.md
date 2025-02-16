@@ -1,2 +1,0 @@
-# CatVidAI
-hackathon idea
